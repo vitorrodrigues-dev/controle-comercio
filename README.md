@@ -44,7 +44,7 @@ Este sistema foi desenvolvido como uma forma prática de atacar esses problemas.
 ## ▶️ Como executar o projeto
 
 1. Clone o repositório:
-```bash
+bash
 git clone https://github.com/vitorrodrigues-dev/controle-comercio.git
 Acesse a pasta:
 cd controle-comercio
