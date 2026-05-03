@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Controle de Comércio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+
+    .table-container {
+     width: 100%;
+     overflow-x: auto;
+    }
+
+    .lucro-result.green  { color: var(--green); }
+    .lucro-result.red    { color: var(--red); }
+    .lucro-result.amber  { color: var(--amber); }
+    :root {
+      --bg:        #f5f4f0;
+      --surface:   #ffffff;
+      --surface2:  #f9f8f5;
+      --border:    #e8e6e0;
+      --border2:   #d4d0c8;
+      --text:      #1c1b18;
+      --text2:     #6b6860;
+      --text3:     #9b9890;
+      --accent:    #2563eb;
+      --accent-bg: #eff6ff;
+      --green:     #16a34a;
+      --green-bg:  #f0fdf4;
+      --red:       #dc2626;
+      --red-bg:    #fef2f2;
+      --amber:     #d97706;
+      --amber-bg:  #fffbeb;
+      --radius:    10px;
+      --radius-sm: 6px;
+      --shadow:    0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.05);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── layout ── */
+    .shell { display: flex; min-height: 100vh; }
+
+    /* ── sidebar ── */
+    .sidebar {
+      width: 220px;
+      max-width: 100%;
+      flex-shrink: 0;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .sidebar-brand {
+      padding: 20px 18px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-brand .logo {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -.2px;
+    }
+
+    .sidebar-brand .sub {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 2px;
+    }
+
+    .nav-section {
+      padding: 18px 12px 4px;
+    }
+
+    .nav-section-title {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--text3);
+      padding: 0 6px;
+      margin-bottom: 4px;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 8px;
+      border-radius: var(--radius-sm);
+      color: var(--text2);
+      text-decoration: none;
+      font-size: 13.5px;
+      font-weight: 400;
+      transition: background .12s, color .12s;
+    }
+
+    .nav-link:hover { background: var(--bg); color: var(--text); }
+
+    .nav-link.ativo {
+      background: var(--accent-bg);
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .nav-link .icon {
+      width: 16px;
+      height: 16px;
+      opacity: .5;
+      flex-shrink: 0;
+    }
+
+    .nav-link.ativo .icon { opacity: 1; }
+
+    /* ── main ── */
+    .main {
+      flex: 1;
+      padding: 20px;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    /* ── page title ── */
+    .page-header { margin-bottom: 28px; }
+    .page-title { font-size: 20px; font-weight: 600; letter-spacing: -.3px; }
+    .page-sub { font-size: 13px; color: var(--text2); margin-top: 4px; }
+
+    /* ── cards de métricas ── */
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 28px; }
+
+    .metric {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .metric-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); margin-bottom: 8px; }
+    .metric-val   { font-size: 26px; font-weight: 600; letter-spacing: -.5px; line-height: 1; }
+    .metric-val.green  { color: var(--green); }
+    .metric-val.red    { color: var(--red); }
+    .metric-val.amber  { color: var(--amber); }
+    .metric-val.blue   { color: var(--accent); }
+
+    /* ── section card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      font-size: 14px;
+      background: var(--surface2);
+    }
+
+    .card-body { padding: 20px; }
+
+    /* ── tabela ── */
+    table { width: 100%; border-collapse: collapse; }
+
+    thead th {
+      padding: 10px 14px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--text3);
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      background: var(--surface2);
+    }
+
+    tbody td {
+      padding: 11px 14px;
+      font-size: 13.5px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: var(--bg); }
+
+    .td-empty { text-align: center; color: var(--text3); padding: 28px; font-size: 13px; }
+
+    /* ── formulário ── */
+    .form-grid { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 4px; }
+
+    .field,
+    .field-sm,
+    .field-xs {
+      flex: 1;
+      min-width: 0;
+    }
+
+    label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--text2);
+    }
+
+    input, select {
+      min-height: 44px;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0 12px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+      width: 100%;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+    }
+
+    input[type="date"] { cursor: pointer; }
+    select option { background: var(--surface); }
+
+    /* ── botões ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 16px;
+      min-height: 44px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 13.5px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: opacity .15s, transform .1s;
+      white-space: nowrap;
+    }
+
+    .btn:active { transform: scale(.98); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { opacity: .88; }
+    .btn-danger  { background: var(--red-bg); color: var(--red); border: 1px solid #fca5a5; }
+    .btn-danger:hover { background: #fee2e2; }
+    .btn-ghost   { background: transparent; color: var(--text2); border: 1px solid var(--border2); }
+    .btn-ghost:hover { background: var(--bg); }
+
+    /* ── badges ── */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .badge-green  { background: var(--green-bg);  color: var(--green); }
+    .badge-red    { background: var(--red-bg);    color: var(--red); }
+    .badge-amber  { background: var(--amber-bg);  color: var(--amber); }
+    .badge-blue   { background: var(--accent-bg); color: var(--accent); }
+
+    /* ── alerta / aviso ── */
+    .aviso {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 10px;
+      font-size: 13.5px;
+    }
+
+    .aviso-red    { background: var(--red-bg);   border: 1px solid #fca5a5;  color: var(--red); }
+    .aviso-amber  { background: var(--amber-bg); border: 1px solid #fcd34d;  color: var(--amber); }
+    .aviso-green  { background: var(--green-bg); border: 1px solid #86efac;  color: var(--green); }
+
+    /* ── divider ── */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+
+    /* ── lucro tabs ── */
+    .lucro-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+    .lucro-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .lucro-card-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--text3);
+      margin-bottom: 14px;
+    }
+
+    .lucro-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 13px; }
+    .lucro-row span:first-child { color: var(--text2); }
+    .lucro-divider { border-top: 1px solid var(--border); margin: 10px 0; }
+    .lucro-result  { font-size: 20px; font-weight: 700; letter-spacing: -.4px; }
+
+    /* ── dias vencimento ── */
+    .venc-hoje   { color: var(--red);   font-weight: 600; }
+    .venc-perto  { color: var(--amber); font-weight: 500; }
+    .venc-ok     { color: var(--green); }
+
+    .lucro-result.green  { color: var(--green); }
+    .lucro-result.red    { color: var(--red); }
+    .lucro-result.amber  { color: var(--amber); }
+    :root {
+      --bg:        #f5f4f0;
+      --surface:   #ffffff;
+      --surface2:  #f9f8f5;
+      --border:    #e8e6e0;
+      --border2:   #d4d0c8;
+      --text:      #1c1b18;
+      --text2:     #6b6860;
+      --text3:     #9b9890;
+      --accent:    #2563eb;
+      --accent-bg: #eff6ff;
+      --green:     #16a34a;
+      --green-bg:  #f0fdf4;
+      --red:       #dc2626;
+      --red-bg:    #fef2f2;
+      --amber:     #d97706;
+      --amber-bg:  #fffbeb;
+      --radius:    10px;
+      --radius-sm: 6px;
+      --shadow:    0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.05);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── layout ── */
+    .shell { display: flex; min-height: 100vh; }
+
+    /* ── sidebar ── */
+    .sidebar {
+      width: 100%;
+      max-width: 220px;
+      flex-shrink: 0;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .sidebar-brand {
+      padding: 20px 18px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-brand .logo {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -.2px;
+    }
+
+    .sidebar-brand .sub {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 2px;
+    }
+
+    .nav-section {
+      padding: 18px 12px 4px;
+    }
+
+    .nav-section-title {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--text3);
+      padding: 0 6px;
+      margin-bottom: 4px;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 8px;
+      border-radius: var(--radius-sm);
+      color: var(--text2);
+      text-decoration: none;
+      font-size: 13.5px;
+      font-weight: 400;
+      transition: background .12s, color .12s;
+    }
+
+    .nav-link:hover { background: var(--bg); color: var(--text); }
+
+    .nav-link.ativo {
+      background: var(--accent-bg);
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .nav-link .icon {
+      width: 16px;
+      height: 16px;
+      opacity: .5;
+      flex-shrink: 0;
+    }
+
+    .nav-link.ativo .icon { opacity: 1; }
+
+    /* ── main ── */
+    .main {
+      flex: 1;
+      padding: 20px;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    /* ── page title ── */
+    .page-header { margin-bottom: 28px; }
+    .page-title { font-size: 20px; font-weight: 600; letter-spacing: -.3px; }
+    .page-sub { font-size: 13px; color: var(--text2); margin-top: 4px; }
+
+    /* ── cards de métricas ── */
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 28px; }
+
+    .metric {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .metric-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); margin-bottom: 8px; }
+    .metric-val   { font-size: 26px; font-weight: 600; letter-spacing: -.5px; line-height: 1; }
+    .metric-val.green  { color: var(--green); }
+    .metric-val.red    { color: var(--red); }
+    .metric-val.amber  { color: var(--amber); }
+    .metric-val.blue   { color: var(--accent); }
+
+    /* ── section card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      font-size: 14px;
+      background: var(--surface2);
+    }
+
+    .card-body { padding: 20px; }
+
+    /* ── tabela ── */
+    table { width: 100%; border-collapse: collapse; }
+
+    thead th {
+      padding: 10px 14px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--text3);
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      background: var(--surface2);
+    }
+
+    tbody td {
+      padding: 11px 14px;
+      font-size: 13.5px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: var(--bg); }
+
+    .td-empty { text-align: center; color: var(--text3); padding: 28px; font-size: 13px; }
+
+    /* ── formulário ── */
+    .form-grid { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 4px; }
+
+    .field { display: flex; flex-direction: column; gap: 5px; min-width: 180px; }
+    .field-sm { min-width: 120px; }
+    .field-xs { min-width: 90px; }
+
+    label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--text2);
+    }
+
+    input, select {
+      min-height: 44px;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0 12px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+      width: 100%;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+    }
+
+    input[type="date"] { cursor: pointer; }
+    select option { background: var(--surface); }
+
+    /* ── botões ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 16px;
+      min-height: 44px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 13.5px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: opacity .15s, transform .1s;
+      white-space: nowrap;
+    }
+
+    .btn:active { transform: scale(.98); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { opacity: .88; }
+    .btn-danger  { background: var(--red-bg); color: var(--red); border: 1px solid #fca5a5; }
+    .btn-danger:hover { background: #fee2e2; }
+    .btn-ghost   { background: transparent; color: var(--text2); border: 1px solid var(--border2); }
+    .btn-ghost:hover { background: var(--bg); }
+
+    /* ── badges ── */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .badge-green  { background: var(--green-bg);  color: var(--green); }
+    .badge-red    { background: var(--red-bg);    color: var(--red); }
+    .badge-amber  { background: var(--amber-bg);  color: var(--amber); }
+    .badge-blue   { background: var(--accent-bg); color: var(--accent); }
+
+    /* ── alerta / aviso ── */
+    .aviso {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 10px;
+      font-size: 13.5px;
+    }
+
+    .aviso-red    { background: var(--red-bg);   border: 1px solid #fca5a5;  color: var(--red); }
+    .aviso-amber  { background: var(--amber-bg); border: 1px solid #fcd34d;  color: var(--amber); }
+    .aviso-green  { background: var(--green-bg); border: 1px solid #86efac;  color: var(--green); }
+
+    /* ── divider ── */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+
+    /* ── lucro tabs ── */
+    .lucro-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+    .lucro-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .lucro-card-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--text3);
+      margin-bottom: 14px;
+    }
+
+    .lucro-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 13px; }
+    .lucro-row span:first-child { color: var(--text2); }
+    .lucro-divider { border-top: 1px solid var(--border); margin: 10px 0; }
+    .lucro-result  { font-size: 20px; font-weight: 700; letter-spacing: -.4px; }
+
+    /* ── dias vencimento ── */
+    .venc-hoje   { color: var(--red);   font-weight: 600; }
+    .venc-perto  { color: var(--amber); font-weight: 500; }
+    .venc-ok     { color: var(--green); }
+
+    @media (max-width: 768px) {
+
+  .shell {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .main {
+    padding: 14px;
+  }
+
+  .metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .lucro-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-grid {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .field,
+  .field-sm,
+  .field-xs {
+    width: 100%;
+  }
+
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  table {
+    min-width: 600px;
+  }
+
+  .table-container {
+    overflow-x: auto;
+  }
+
+  .page-title {
+    font-size: 18px;
+  }
+
+  .metric-val {
+    font-size: 22px;
+  }
+}
+
+  </style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- ── SIDEBAR ── -->
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <div class="logo">Controle de Comércio</div>
+      <div class="sub">Sistema de gestão</div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-title"><strong>Estoque</strong></div>
+      <a href="/" class="nav-link {{ 'ativo' if secao == 'produtos' }}">
+        <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M20 7H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 3H8l-2 4h12l-2-4z"/></svg>
+        Produtos
+      </a>
+      <a href="/entrada" class="nav-link {{ 'ativo' if secao == 'entrada' }}">
+        <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 4v16m8-8H4"/></svg>
+        Entrada
+      </a>
+      <a href="/saida" class="nav-link {{ 'ativo' if secao == 'saida' }}">
+        <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M20 12H4"/><path d="M4 12l4-4M4 12l4 4"/></svg>
+        Saída
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-title">Vendas</div>
+      <a href="/venda" class="nav-link {{ 'ativo' if secao == 'venda' }}">
+        <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+        Registrar Venda
+      </a>
+      <a href="/relatorio-vendas" class="nav-link {{ 'ativo' if secao == 'rel-vendas' }}">
+        <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        Relatório
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-title"><strong>Financeiro</strong></div>
+      <a href="/gastos" class="nav-link {{ 'ativo' if secao == 'gastos' }}">
+        <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+        Gastos
+      </a>
+      <a href="/contas" class="nav-link {{ 'ativo' if secao == 'contas' }}">
+        <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        Boletos / Contas
+      </a>
+      <a href="/lucro" class="nav-link {{ 'ativo' if secao == 'lucro' }}">
+        <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Lucro
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-title"><strong>Produção</strong></div>
+      <a href="/producao" class="nav-link {{ 'ativo' if secao == 'producao' }}">
+        <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+        Produção
+      </a>
+      <a href="/perdas" class="nav-link {{ 'ativo' if secao == 'perdas' }}">
+        <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+        Perdas
+      </a>
+      <a href="/relatorio-producao" class="nav-link {{ 'ativo' if secao == 'rel-producao' }}">
+        <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
+        Produção x Perdas
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-title"><strong>Alertas</strong></div>
+      <a href="/alertas" class="nav-link {{ 'ativo' if secao == 'alertas' }}">
+        <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        Alertas
+      </a>
+    </div>
+  </nav>
+
+  <!-- ── MAIN ── -->
+  <main class="main">
+
+
+    {# ══ PRODUTOS ══ #}
+    {% if secao == 'produtos' %}
+      <div class="page-header">
+        <div class="page-title">Produtos</div>
+        <div class="page-sub">Gerencie seu estoque e cadastre novos itens</div>
+      </div>
+
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-label">Total de produtos</div>
+          <div class="metric-val blue">{{ total }}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Estoque baixo</div>
+          <div class="metric-val {{ 'red' if baixo > 0 else 'green' }}">{{ baixo }}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">A vencer em breve</div>
+          <div class="metric-val {{ 'amber' if venc > 0 else 'green' }}">{{ venc }}</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">Lista de produtos</div>
+
+  <div class="table-container">
+   <table>
+    <thead>
+      <tr>
+        <th>ID</th><th>Nome</th><th>Preço</th><th>Quantidade</th><th>Validade</th><th>Status</th><th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in produtos %}
+      <tr>
+        <td style="color:var(--text3)">{{ p.id }}</td>
+        <td><strong>{{ p.nome }}</strong></td>
+        <td>R$ {{ "%.2f"|format(p.preco) }}</td>
+
+        <td>
+          {% if p.quantidade <= 5 %}
+            <span class="badge badge-red">{{ p.quantidade }}</span>
+          {% elif p.quantidade <= 15 %}
+            <span class="badge badge-amber">{{ p.quantidade }}</span>
+          {% else %}
+            {{ p.quantidade }}
+          {% endif %}
+        </td>
+
+        <td>
+          {% if p.validade %}
+            {{ p.validade }}
+          {% else %}
+            <span style="color:var(--text3)">—</span>
+          {% endif %}
+        </td>
+
+        <td>
+          <form action="/excluir-produto/{{ p.id }}" method="post">
+            <button class="btn btn-danger" type="submit">Excluir</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="7" class="td-empty">Nenhum produto cadastrado.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+      <div class="card">
+        <div class="card-header">Cadastrar novo produto</div>
+        <div class="card-body">
+          <form action="/cadastrar-produto" method="post">
+            <div class="form-grid">
+              <div class="field"><label for="nome">Nome do produto</label><input type="text" id="nome" name="nome" placeholder="Ex: Coxinha" required></div>
+              <div class="field field-sm"><label for="preco">Preço (R$)</label><input type="number" id="preco" name="preco" placeholder="0,00" step="0.01" min="0" required></div>
+              <div class="field field-xs"><label for="quantidade">Qtd. inicial</label><input type="number" id="quantidade" name="quantidade" placeholder="0" min="0" required></div>
+              <div class="field field-sm"><label for="validade">Validade (opcional)</label><input type="date" id="validade" name="validade"></div>
+              <div class="field" style="min-width:auto;justify-content:flex-end"><button class="btn btn-primary" type="submit">Cadastrar</button></div>
+            </div>
+          </form>
+        </div>
+      </div>
+    {% endif %}
+
+
+    {# ══ ENTRADA ══ #}
+    {% if secao == 'entrada' %}
+      <div class="page-header">
+        <div class="page-title">Entrada de Estoque</div>
+        <div class="page-sub">Registre a chegada de mercadorias</div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <form action="/entrada" method="post">
+            <div class="form-grid">
+              <div class="field"><label for="produto_id">Produto</label>
+                <select id="produto_id" name="produto_id" required>
+                  <option value="">Selecione um produto...</option>
+                  {% for p in produtos %}
+                  <option value="{{ p.id }}">{{ p.nome }} — estoque: {{ p.quantidade }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="field field-xs"><label for="quantidade">Quantidade</label><input type="number" id="quantidade" name="quantidade" placeholder="0" min="1" required></div>
+              <div class="field" style="min-width:auto"><button class="btn btn-primary" type="submit">Registrar entrada</button></div>
+            </div>
+          </form>
+        </div>
+      </div>
+    {% endif %}
+
+
+    {# ══ SAÍDA ══ #}
+    {% if secao == 'saida' %}
+      <div class="page-header">
+        <div class="page-title">Saída de Estoque</div>
+        <div class="page-sub">Registre retiradas manuais do estoque</div>
+      </div>
+      {% if erro %}
+      <div class="aviso aviso-red" style="margin-bottom:16px">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:2px"><path d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+        {{ erro }}
+      </div>
+      {% endif %}
+      <div class="card">
+        <div class="card-body">
+          <form action="/saida" method="post">
+            <div class="form-grid">
+              <div class="field"><label for="produto_id">Produto</label>
+                <select id="produto_id" name="produto_id" required>
+                  <option value="">Selecione...</option>
+                  {% for p in produtos %}
+                  <option value="{{ p.id }}">{{ p.nome }} — estoque: {{ p.quantidade }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="field field-xs"><label for="quantidade">Quantidade</label><input type="number" id="quantidade" name="quantidade" placeholder="0" min="1" required></div>
+              <div class="field" style="min-width:auto"><button class="btn btn-primary" type="submit">Registrar saída</button></div>
+            </div>
+          </form>
+        </div>
+      </div>
+    {% endif %}
+
+
+    {# ══ VENDA ══ #}
+    {% if secao == 'venda' %}
+      <div class="page-header">
+        <div class="page-title">Registrar Venda</div>
+        <div class="page-sub">Venda um produto e atualize o estoque automaticamente</div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <form action="/venda" method="post">
+            <div class="form-grid">
+              <div class="field"><label for="produto_id">Produto</label>
+                <select id="produto_id" name="produto_id" required>
+                  <option value="">Selecione...</option>
+                  {% for p in produtos %}
+                  <option value="{{ p.id }}">{{ p.nome }} — R$ {{ "%.2f"|format(p.preco) }} ({{ p.quantidade }} em estoque)</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="field field-xs"><label for="quantidade">Quantidade</label><input type="number" id="quantidade" name="quantidade" placeholder="1" min="1" required></div>
+              <div class="field" style="min-width:auto"><button class="btn btn-primary" type="submit">Registrar venda</button></div>
+            </div>
+          </form>
+        </div>
+      </div>
+    {% endif %}
+
+
+    {# ══ RELATÓRIO VENDAS ══ #}
+    {% if secao == 'rel-vendas' %}
+      <div class="page-header">
+        <div class="page-title">Relatório de Vendas</div>
+      </div>
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-label">Total hoje</div>
+          <div class="metric-val green">R$ {{ "%.2f"|format(total_hoje) }}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Total do mês</div>
+          <div class="metric-val blue">R$ {{ "%.2f"|format(total_mes) }}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Total geral</div>
+          <div class="metric-val amber">R$ {{ "%.2f"|format(total) }}</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">Todas as vendas</div>
+        <table>
+          <thead><tr><th>ID</th><th>Produto</th><th>Qtd</th><th>Total</th><th>Data</th></tr></thead>
+          <tbody>
+            {% for v in vendas|reverse %}
+            <tr>
+              <td style="color:var(--text3)">{{ v.id }}</td>
+              <td>{{ v.produto or "—" }}</td>
+              <td>{{ v.quantidade }}</td>
+              <td><strong style="color:var(--green)">R$ {{ "%.2f"|format(v.total) }}</strong></td>
+              <td style="color:var(--text2)">{{ v.data }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="td-empty">Nenhuma venda registrada.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+
+
+    {# ══ GASTOS ══ #}
+    {% if secao == 'gastos' %}
+      <div class="page-header">
+        <div class="page-title">Gastos</div>
+        <div class="page-sub">Registre compras de insumos e despesas do dia a dia</div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <form action="/gastos" method="post">
+            <div class="form-grid">
+              <div class="field"><label for="descricao">Descrição</label><input type="text" id="descricao" name="descricao" placeholder="Ex: Farinha de trigo" required></div>
+              <div class="field field-sm"><label for="valor">Valor (R$)</label><input type="number" id="valor" name="valor" placeholder="0,00" step="0.01" min="0" required></div>
+              <div class="field" style="min-width:auto"><button class="btn btn-primary" type="submit">Registrar gasto</button></div>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">Histórico de gastos</div>
+        <table>
+          <thead><tr><th>ID</th><th>Descrição</th><th>Valor</th><th>Data</th></tr></thead>
+          <tbody>
+            {% for g in gastos|reverse %}
+            <tr>
+              <td style="color:var(--text3)">{{ g.id }}</td>
+              <td>{{ g.descricao }}</td>
+              <td style="color:var(--red)">R$ {{ "%.2f"|format(g.valor) }}</td>
+              <td style="color:var(--text2)">{{ g.data }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="td-empty">Nenhum gasto registrado.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+
+
+    {# ══ CONTAS / BOLETOS ══ #}
+    {% if secao == 'contas' %}
+      <div class="page-header">
+        <div class="page-title">Boletos e Contas</div>
+        <div class="page-sub">Controle entradas e saídas programadas com data de vencimento</div>
+      </div>
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-label">Entradas</div>
+          <div class="metric-val green">R$ {{ "%.2f"|format(total_entrada) }}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Saídas</div>
+          <div class="metric-val red">R$ {{ "%.2f"|format(total_saida) }}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Saldo</div>
+          <div class="metric-val {{ 'green' if saldo >= 0 else 'red' }}">R$ {{ "%.2f"|format(saldo) }}</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <form action="/contas" method="post">
+            <div class="form-grid">
+              <div class="field field-xs"><label for="tipo">Tipo</label>
+                <select id="tipo" name="tipo" required>
+                  <option value="saida">Saída (boleto)</option>
+                  <option value="entrada">Entrada</option>
+                </select>
+              </div>
+              <div class="field"><label for="descricao">Descrição</label><input type="text" id="descricao" name="descricao" placeholder="Ex: Conta de luz" required></div>
+              <div class="field field-sm"><label for="valor">Valor (R$)</label><input type="number" id="valor" name="valor" placeholder="0,00" step="0.01" min="0" required></div>
+              <div class="field field-sm"><label for="vencimento">Vencimento</label><input type="date" id="vencimento" name="vencimento"></div>
+              <div class="field" style="min-width:auto"><button class="btn btn-primary" type="submit">Registrar</button></div>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">Contas registradas</div>
+        <table>
+          <thead><tr><th>Tipo</th><th>Descrição</th><th>Valor</th><th>Vencimento</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for c in contas %}
+            <tr>
+              <td>
+                {% if c.tipo == 'entrada' %}
+                  <span class="badge badge-green">Entrada</span>
+                {% else %}
+                  <span class="badge badge-red">Saída</span>
+                {% endif %}
+              </td>
+              <td>{{ c.descricao }}</td>
+              <td>
+                {% if c.tipo == 'entrada' %}
+                  <span style="color:var(--green)">R$ {{ "%.2f"|format(c.valor) }}</span>
+                {% else %}
+                  <span style="color:var(--red)">R$ {{ "%.2f"|format(c.valor) }}</span>
+                {% endif %}
+              </td>
+              <td>{{ c.vencimento if c.vencimento else '—' }}</td>
+              <td>
+                {% if c._dias_venc is not none %}
+                  {% if c._dias_venc < 0 %}
+                    <span class="badge badge-red">Vencida há {{ c._dias_venc|abs }} dias</span>
+                  {% elif c._dias_venc == 0 %}
+                    <span class="badge badge-red">Vence hoje!</span>
+                  {% elif c._dias_venc <= dias_aviso %}
+                    <span class="badge badge-amber">Vence em {{ c._dias_venc }}d</span>
+                  {% else %}
+                    <span class="badge badge-green">OK</span>
+                  {% endif %}
+                {% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="td-empty">Nenhuma conta registrada.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+
+
+    
+    {# ══ LUCRO ══ #}
+{% if secao == 'lucro' %}
+  <div class="page-header">
+    <div class="page-title">Relatório de Lucro</div>
+    <div class="page-sub">Resultado financeiro por período</div>
+  </div>
+
+  <div class="lucro-grid">
+
+    <div class="lucro-card">
+      <div class="lucro-card-title">Hoje</div>
+
+      <div class="lucro-row">
+        <span>Vendas</span>
+        <span style="color:var(--green)">R$ {{ "%.2f"|format(tv_hoje) }}</span>
+      </div>
+
+      <div class="lucro-row">
+        <span>Gastos</span>
+        <span style="color:var(--red)">R$ {{ "%.2f"|format(tg_hoje) }}</span>
+      </div>
+
+      <div class="lucro-divider"></div>
+
+      <div class="lucro-result {{ 'green' if tipo_hoje == 'lucro' else 'red' if tipo_hoje == 'prejuizo' else 'amber' }}">
+        {{ 'Lucro' if tipo_hoje == 'lucro' else 'Prejuízo' if tipo_hoje == 'prejuizo' else 'Empate' }}
+        R$ {{ "%.2f"|format(res_hoje|abs) }}
+      </div>
+    </div>
+
+    <div class="lucro-card">
+      <div class="lucro-card-title">Este mês</div>
+
+      <div class="lucro-row">
+        <span>Vendas</span>
+        <span style="color:var(--green)">R$ {{ "%.2f"|format(tv_mes) }}</span>
+      </div>
+
+      <div class="lucro-row">
+        <span>Gastos</span>
+        <span style="color:var(--red)">R$ {{ "%.2f"|format(tg_mes) }}</span>
+      </div>
+
+      <div class="lucro-divider"></div>
+
+      <div class="lucro-result {{ 'green' if tipo_mes == 'lucro' else 'red' if tipo_mes == 'prejuizo' else 'amber' }}">
+        {{ 'Lucro' if tipo_mes == 'lucro' else 'Prejuízo' if tipo_mes == 'prejuizo' else 'Empate' }}
+        R$ {{ "%.2f"|format(res_mes|abs) }}
+      </div>
+    </div>
+
+    <div class="lucro-card">
+      <div class="lucro-card-title">Total geral</div>
+
+      <div class="lucro-row">
+        <span>Vendas</span>
+        <span style="color:var(--green)">R$ {{ "%.2f"|format(total_vendas) }}</span>
+      </div>
+
+      <div class="lucro-row">
+        <span>Gastos</span>
+        <span style="color:var(--red)">R$ {{ "%.2f"|format(total_gastos) }}</span>
+      </div>
+
+      <div class="lucro-divider"></div>
+
+      <div class="lucro-result {{ 'green' if tipo == 'lucro' else 'red' if tipo == 'prejuizo' else 'amber' }}">
+        {{ 'Lucro' if tipo == 'lucro' else 'Prejuízo' if tipo == 'prejuizo' else 'Empate' }}
+        R$ {{ "%.2f"|format(resultado|abs) }}
+      </div>
+    </div>
+
+  </div>
+{% endif %}
+
+
+    {# ══ PRODUÇÃO ══ #}
+    {% if secao == 'producao' %}
+      <div class="page-header">
+        <div class="page-title">Registrar Produção</div>
+        <div class="page-sub">Registre o que foi produzido hoje</div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <form action="/producao" method="post">
+            <div class="form-grid">
+              <div class="field"><label for="produto">Produto produzido</label><input type="text" id="produto" name="produto" placeholder="Ex: Coxinha" required></div>
+              <div class="field field-xs"><label for="quantidade">Quantidade</label><input type="number" id="quantidade" name="quantidade" placeholder="0" min="1" required></div>
+              <div class="field" style="min-width:auto"><button class="btn btn-primary" type="submit">Registrar produção</button></div>
+            </div>
+          </form>
+        </div>
+      </div>
+    {% endif %}
+
+
+    {# ══ PERDAS ══ #}
+    {% if secao == 'perdas' %}
+      <div class="page-header">
+        <div class="page-title">Registrar Perda</div>
+        <div class="page-sub">Registre produtos perdidos por vencimento, avaria ou outros motivos</div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <form action="/perdas" method="post">
+            <div class="form-grid">
+              <div class="field"><label for="produto">Produto</label><input type="text" id="produto" name="produto" placeholder="Ex: Coxinha" required></div>
+              <div class="field field-xs"><label for="quantidade">Quantidade</label><input type="number" id="quantidade" name="quantidade" placeholder="0" min="1" required></div>
+              <div class="field"><label for="motivo">Motivo</label><input type="text" id="motivo" name="motivo" placeholder="Ex: Vencimento" required></div>
+              <div class="field" style="min-width:auto"><button class="btn btn-primary" type="submit">Registrar perda</button></div>
+            </div>
+          </form>
+        </div>
+      </div>
+    {% endif %}
+
+
+    {# ══ RELATÓRIO PRODUÇÃO x PERDAS ══ #}
+    {% if secao == 'rel-producao' %}
+      <div class="page-header">
+        <div class="page-title">Produção × Perdas</div>
+        <div class="page-sub">Análise de eficiência produtiva</div>
+      </div>
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-label">Total produzido</div>
+          <div class="metric-val blue">{{ total_produzido }}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Total perdido</div>
+          <div class="metric-val red">{{ total_perdido }}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Desperdício</div>
+          <div class="metric-val amber">{{ desperdicio }}%</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Eficiência</div>
+          <div class="metric-val green">{{ eficiencia }}%</div>
+        </div>
+      </div>
+    {% endif %}
+
+
+    {# ══ ALERTAS ══ #}
+    {% if secao == 'alertas' %}
+      <div class="page-header">
+        <div class="page-title">Alertas</div>
+        <div class="page-sub">Itens que precisam de atenção agora</div>
+      </div>
+
+      {% if not alertas and not venc_produtos and not venc_contas %}
+        <div class="aviso aviso-green">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Tudo em ordem — nenhum alerta no momento.
+        </div>
+      {% endif %}
+
+      {% if alertas %}
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header">⚠ Estoque baixo (abaixo de {{ minimo }} unidades)</div>
+          <div class="card-body" style="padding-top:12px">
+            {% for a in alertas %}
+            <div class="aviso aviso-red">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:2px"><path d="M20 7H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/></svg>
+              <div><strong>{{ a.nome }}</strong> — apenas {{ a.quantidade }} unidades em estoque</div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      {% if venc_produtos %}
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header">📦 Produtos próximos ao vencimento</div>
+          <div class="card-body" style="padding-top:12px">
+            {% for p in venc_produtos %}
+            <div class="aviso {{ 'aviso-red' if p._dias <= 0 else 'aviso-amber' }}">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:2px"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              <div>
+                <strong>{{ p.nome }}</strong> — validade {{ p.validade }}
+                {% if p._dias < 0 %}
+                  <span class="badge badge-red" style="margin-left:6px">Vencido há {{ p._dias|abs }} dias</span>
+                {% elif p._dias == 0 %}
+                  <span class="badge badge-red" style="margin-left:6px">Vence hoje!</span>
+                {% else %}
+                  <span class="badge badge-amber" style="margin-left:6px">Vence em {{ p._dias }} dias</span>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      {% if venc_contas %}
+        <div class="card">
+          <div class="card-header">💸 Boletos próximos ao vencimento</div>
+          <div class="card-body" style="padding-top:12px">
+            {% for c in venc_contas %}
+            <div class="aviso {{ 'aviso-red' if c._dias <= 0 else 'aviso-amber' }}">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:2px"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              <div>
+                <strong>{{ c.descricao }}</strong> — R$ {{ "%.2f"|format(c.valor) }} — vence {{ c.vencimento }}
+                {% if c._dias < 0 %}
+                  <span class="badge badge-red" style="margin-left:6px">Vencido há {{ c._dias|abs }} dias</span>
+                {% elif c._dias == 0 %}
+                  <span class="badge badge-red" style="margin-left:6px">Vence hoje!</span>
+                {% else %}
+                  <span class="badge badge-amber" style="margin-left:6px">Vence em {{ c._dias }} dias</span>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+    {% endif %}
+
+  </main>
+</div>
+
+</body>
+</html>
+
+
+ 
