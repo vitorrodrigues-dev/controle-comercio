@@ -54,16 +54,16 @@ Execute o projeto:
 python app.py
 Acesse no navegador:
 http://127.0.0.1:5000
+
 📸 Preview do sistema
 
 ###Tela produtos
-![Tela produtos](./assets/tela-produtos..png)
+![Tela produtos](./assets/tela-produtos.png)
 
 ###Tela Boletos
 ![Tela boletos](./assets/tela-boletos.png)
 
-![Tela principal](./assets/tela1.png)
-![Cadastro de produtos](./assets/tela2.png)
+ 
 📁 Estrutura do projeto
 📦 projeto
  ┣ 📂 templates
