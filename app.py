@@ -232,9 +232,9 @@ def contas():
     lista  = carregar("contas")
     hoje   = date.today()
     for c in lista:
-    dias, status = calcular_vencimento(c.get("vencimento"), hoje)
-    c["_dias_venc"] = dias
-    c["_status"] = status
+        dias, status = calcular_vencimento(c.get("vencimento"), hoje)
+        c["_dias_venc"] = dias
+        c["_status"] = status
     total_entrada = round(sum(c["valor"] for c in lista if c.get("tipo") == "entrada"), 2)
     total_saida   = round(sum(c["valor"] for c in lista if c.get("tipo") == "saida"), 2)
     saldo         = round(total_entrada - total_saida, 2)
