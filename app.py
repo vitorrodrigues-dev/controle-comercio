@@ -19,9 +19,27 @@ def safe_float(valor, default=0.0):
 app = Flask(__name__)
 inicializar_dados()
 
-DIAS_AVISO_VENCIMENTO = 7   # boletos/produtos vencem em até 7 dias → alerta
+DIAS_AVISO_VENCIMENTO = 7   
 
+def calcular_vencimento(data_str, hoje):
+    if not data_str:
+        return None, None
 
+    try:
+        data = date.fromisoformat(data_str)
+        dias = (data - hoje).days
+
+        if dias < 0:
+            status = "vencido"
+        elif dias <= DIAS_AVISO_VENCIMENTO:
+            status = "alerta"
+        else:
+            status = "ok"
+
+        return dias, status
+
+    except ValueError:
+        return None, None
 # ══════════════════════════════════════════════════════════════════════════════
 #  PRODUTOS
 # ══════════════════════════════════════════════════════════════════════════════
@@ -213,17 +231,10 @@ def registrar_gasto():
 def contas():
     lista  = carregar("contas")
     hoje   = date.today()
-    # marca vencimento em cada conta
     for c in lista:
-        val = c.get("vencimento", "")
-        if val:
-            try:
-                d = date.fromisoformat(val)
-                c["_dias_venc"] = (d - hoje).days
-            except ValueError:
-                c["_dias_venc"] = None
-        else:
-            c["_dias_venc"] = None
+    dias, status = calcular_vencimento(c.get("vencimento"), hoje)
+    c["_dias_venc"] = dias
+    c["_status"] = status
     total_entrada = round(sum(c["valor"] for c in lista if c.get("tipo") == "entrada"), 2)
     total_saida   = round(sum(c["valor"] for c in lista if c.get("tipo") == "saida"), 2)
     saldo         = round(total_entrada - total_saida, 2)
